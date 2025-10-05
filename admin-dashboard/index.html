@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin BibitKu</title>
+  <style>
+    body { font-family: Arial; background: #f5f5f5; margin: 0; padding: 20px; }
+    header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+    .login-form { max-width: 300px; margin: 100px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    button { background: #3498db; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; }
+    #dashboard { display: none; }
+    .order { background: white; margin: 10px 0; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <div class="login-form">
+      <h2>Login Admin</h2>
+      <p>Username: admin</p>
+      <p>Password: admin123</p>
+      <button onclick="login()">Masuk</button>
+    </div>
+  </div>
+
+  <div id="dashboard">
+    <header>
+      <h1>Admin Dashboard - BibitKu</h1>
+      <button onclick="logout()" style="float: right; background: #e74c3c;">Logout</button>
+    </header>
+    <main style="padding: 20px;">
+      <h2>Daftar Order</h2>
+      <div id="orders"></div>
+      <button onclick="refreshOrders()" style="background: #27ae60; margin-top: 20px;">Refresh</button>
+    </main>
+  </div>
+
+  <script>
+    let token = '';
+
+    async function login() {
+      try {
+        const response = await fetch('http://localhost:5000/api/login', {  // Ganti URL nanti
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const data = await response.json();
+        if (data.success) {
+          token = data.token;
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('dashboard').style.display = 'block';
+          refreshOrders();
+        } else {
+          alert('Login gagal!');
+        }
+      } catch (error) {
+        alert('Backend belum jalan');
+      }
+    }
+
+    async function refreshOrders() {
+      try {
+        const response = await fetch('http://localhost:5000/api/orders', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const orders = await response.json();
+        const container = document.getElementById('orders');
+        if (orders.length === 0) {
+          container.innerHTML = '<p>Tidak ada order.</p>';
+        } else {
+          container.innerHTML = orders.map(order => `
+            <div class="order">
+              <h3>Order #${order.id}</h3>
+              <p>Pelanggan: ${order.customer.name}</p>
+              <p>Total: Rp ${order.total.toLocaleString()}</p>
+              <p>Tanggal: ${new Date(order.date).toLocaleString('id-ID')}</p>
+            </div>
+          `).join('');
+        }
+      } catch (error) {
+        alert('Error load order');
+      }
+    }
+
+    function logout() {
+      document.getElementById('login').style.display = 'block';
+      document.getElementById('dashboard').style.display = 'none';
+      token = '';
+    }
+  </script>
+</body>
+</html>

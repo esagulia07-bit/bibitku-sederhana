@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BibitKu - Jual Bibit Tanaman</title>
+  <style>
+    body { font-family: Arial; background: #f0f8f0; margin: 0; padding: 20px; }
+    header { background: #228b22; color: white; padding: 20px; text-align: center; }
+    .product { background: white; margin: 10px 0; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    button { background: #4caf50; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #45a049; }
+    #cart { margin-top: 20px; padding: 15px; background: #e8f5e8; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌱 BibitKu - Penjualan Bibit Tanaman</h1>
+    <p>Bibit berkualitas untuk masa depan hijau</p>
+  </header>
+  
+  <main>
+    <h2 style="text-align: center;">Daftar Produk</h2>
+    <div id="products"></div>
+    
+    <div id="cart" style="display: none;">
+      <h3>Keranjang Belanja</h3>
+      <ul id="cart-items"></ul>
+      <p>Total: <span id="total">Rp 0</span></p>
+      <button onclick="submitOrder()">Beli Sekarang</button>
+    </div>
+  </main>
+
+  <script>
+    // Data produk (nanti ambil dari backend)
+    const products = [
+      { id: 1, name: 'Bibit Sengon', price: 15000, stock: 100, desc: 'Untuk reboisasi' },
+      { id: 2, name: 'Bibit Jati', price: 25000, stock: 75, desc: 'Kayu premium' },
+      { id: 3, name: 'Bibit Mahoni', price: 45000, stock: 50, desc: 'Kayu premium' },
+      { id: 4, name: 'Bibit Meranti', price: 45000, stock: 50, desc: 'Buah premium' }
+    ];
+
+    let cart = [];
+
+    // Tampilkan produk
+    function showProducts() {
+      const container = document.getElementById('products');
+      container.innerHTML = products.map(p => `
+        <div class="product">
+          <h3>${p.name}</h3>
+          <p>${p.desc}</p>
+          <p>Harga: Rp ${p.price.toLocaleString()}</p>
+          <p>Stok: ${p.stock}</p>
+          <button onclick="addToCart(${p.id})">Tambah ke Keranjang</button>
+        </div>
+      `).join('');
+    }
+
+    // Tambah ke cart
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      cart.push(product);
+      updateCart();
+    }
+
+    // Update tampilan cart
+    function updateCart() {
+      const cartDiv = document.getElementById('cart');
+      const items = document.getElementById('cart-items');
+      const total = document.getElementById('total');
+      
+      if (cart.length > 0) {
+        cartDiv.style.display = 'block';
+        items.innerHTML = cart.map((item, i) => `<li>${item.name} - Rp ${item.price.toLocaleString()}</li>`).join('');
+        total.textContent = `Rp ${cart.reduce((sum, item) => sum + item.price, 0).toLocaleString()}`;
+      }
+    }
+
+    // Submit order ke backend
+    async function submitOrder() {
+      try {
+        const response = await fetch('http://localhost:5000/api/orders', {  // Ganti URL backend nanti
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer: { name: 'Pelanggan Demo', email: 'demo@email.com' },
+            items: cart,
+            total: cart.reduce((sum, item) => sum + item.price, 0)
+          })
+        });
+        if (response.ok) {
+          alert('Order berhasil dikirim!');
+          cart = [];
+          updateCart();
+        } else {
+          alert('Error, coba lagi');
+        }
+      } catch (error) {
+        alert('Koneksi error, backend belum jalan');
+      }
+    }
+
+    // Jalankan
+    showProducts();
+  </script>
+</body>
+</html>
